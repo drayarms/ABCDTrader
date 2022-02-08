@@ -472,6 +472,7 @@ class Indicators:
 			prev_atr = atr#Uses true range list before it gets modified below
 
 		true_range = self.compute_true_range(len(assets), hi_prices_df.to_numpy()[-1], lo_prices_df.to_numpy()[-1], close_prices_df.to_numpy()[-2])
+		#print("TR list "+str(true_range_list))
 		del true_range_list[0]#Delete first element
 		true_range_list.append(true_range)
 		return self.compute_atr(len(assets), true_range_list)	

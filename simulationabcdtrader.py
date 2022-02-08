@@ -13,7 +13,7 @@ from pytz import timezone
 import time
 import config 
 import assets
-#import plot 
+import plot 
 #import machinelearningengine as mle
 #import trainingdata as tdata
 #import analytics as ana
@@ -51,7 +51,7 @@ UPPER_PRICE_THRESHOLD = 5000#3500
 VOL_THRESHOLD = 10000000#5000000#10000000#20000000
 GAP_THRESHOLD = 5
 abcd = None
-TRAINING_WINDOW = '1 days'
+#TRAINING_WINDOW = '1 days'
 #SCALING = 'fs'#fs = feature scaling, mn = mean_normalized
 #SCALING = 'mn'
 assets_dict = []
@@ -212,12 +212,12 @@ def run(logs, logs1, start_date, end_date, _1min_periodA, _1min_periodB, _5min_p
 
 	#analytics = ana.Analytics()
 	#mlengine = mle.Machinelearningengine()
-	abcd = abcdtrader.Abcdtrader(logs, logs1)#New instance of strategy used in run func
+	abcd = abcdtrader.Abcdtrader(logs, logs1, len(universe))#New instance of strategy used in run func
 	sr = supres.Supportresistance(len(universe))
 	ind = indi.Indicators()
 	abcd.num_training_days = num_training_days
 	#td = tdata.Trainingdata()#New instance of Trainingdata
-	plt = None# plot.Plot(len(universe))#New instamce of Plot
+	plt = plot.Plot(len(universe))#New instamce of Plot
 	pNl = pnl.PnL(len(universe))#New instance of PnL
 
 	#print("time list "+str(plt.time_list)+" price list "+str(plt.price_list))

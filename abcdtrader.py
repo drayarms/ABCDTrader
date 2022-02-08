@@ -35,7 +35,7 @@ DAY_CANDLESTICK_PERIODS = {'A':'1 days', 'B':'1D', 'terminal':'0 days'}
 
 class Abcdtrader:
 	
-	def __init__(self, logs, logs1):
+	def __init__(self, logs, logs1, num_assets):
 
 	#def __init__self(self, logs):
 		#self.prev_ema9 = None
@@ -88,6 +88,11 @@ class Abcdtrader:
 		self.y_threshold_train = 0#0.4#0.4
 		self.y_threshold_test = 0#0.4
 		self.error_threshold = 0.1
+
+		self.yesterday_hi = [-np.inf] * num_assets
+		self.yesterday_lo = [np.inf] * num_assets
+		self.today_hi = [-np.inf] * num_assets
+		self.today_lo = [np.inf] * num_assets		
 
 
 	def file_log_write(self, txt):
@@ -582,6 +587,22 @@ class Abcdtrader:
 
 
 
+	def update_daily_hi_lo(self, open_price ,close, assets):
+		for i in range(0, len(assets)):
+			lo = open_price[i] 
+			hi = close[i]
+			if close[i] < lo:
+				lo = close[i]
+				hi = open_price[i]
+
+			if lo < self.today_lo[i]:
+				self.today_lo[i] = lo
+
+			if hi > self.today_hi[i]:
+				self.today_hi[i] = hi
+
+
+
 	def execute1(self, backtrader, assets, initial_start_date, curr_date, end_date, test_date, _1min_periodA, _1min_periodB, _5min_periodA, _5min_periodB, _15min_periodA, _15min_periodB, day_periodB, kwargs):
 		if curr_date == test_date:
 			print("////////////////////////START TEST DATE////////////////////////\n")
@@ -671,8 +692,8 @@ class Abcdtrader:
 			#print("5 min close price15: "+str(kwargs['ind']._5min_close_price15))
 			kwargs['ind']._5min_atr, kwargs['ind']._5min_short_atr, kwargs['ind']._5min_vwap, kwargs['ind']._5min_cummulative_pv, kwargs['ind']._5min_cummulative_vol, kwargs['ind']._5min_close_price15, kwargs['ind']._5min_rsi, kwargs['ind']._5min_close_price26_df, kwargs['ind']._5min_close_price12_df, kwargs['ind']._5min_close_price9_df, kwargs['ind']._5min_close_price_df, kwargs['ind']._5min_sma200, kwargs['ind']._5min_sma50, kwargs['ind']._5min_sma26, kwargs['ind']._5min_sma12, kwargs['ind']._5min_prev_ema200, kwargs['ind']._5min_prev_ema50, kwargs['ind']._5min_prev_ema26, kwargs['ind']._5min_prev_ema12, kwargs['ind']._5min_ema200, kwargs['ind']._5min_ema50, kwargs['ind']._5min_ema26, kwargs['ind']._5min_ema12, kwargs['ind']._5min_trend_moving_ave, kwargs['ind']._5min_fast_moving_ave, kwargs['ind']._5min_slow_moving_ave, kwargs['ind']._5min_stop_moving_ave, kwargs['ind']._5min_fast_moving_ave_prev, kwargs['ind']._5min_stop_moving_ave_prev, kwargs['ind']._5min_macd, kwargs['ind']._5min_prev_macd, kwargs['ind']._5min_macd_list, kwargs['ind']._5min_macd_signal_line, kwargs['ind']._5min_fast_ma, kwargs['ind']._5min_fast_ma_prev, kwargs['ind']._5min_slow_ma, kwargs['ind']._5min_trend_ma, kwargs['ind']._5min_macd_np, kwargs['ind']._5min_prev_macd_np, kwargs['ind']._5min_macd_signal_line_np, kwargs['ind']._5min_stop_ma, kwargs['ind']._5min_stop_ma_prev, kwargs['ind']._5min_macd_signal_diff = kwargs['ind'].generate_indicators(kwargs, assets, curr_date, initial_start_date, kwargs['ind']._5min_atr, kwargs['ind']._5min_vwaps, _5min_close_price15, _5min_close_prices_df, _5min_hi_prices_df, _5min_lo_prices_df, _5min_vol_df, kwargs['ind']._5min_true_range_list, kwargs['ind']._5min_short_true_range_list, kwargs['ind'].atr_window, kwargs['ind']._5min_prev_atr, kwargs['ind']._5min_short_atr, kwargs['ind']._5min_short_prev_atr, kwargs['ind'].short_atr_window, kwargs['ind']._5min_cummulative_pv, kwargs['ind']._5min_cummulative_vol, kwargs['ind']._5min_sma200, kwargs['ind']._5min_sma50, kwargs['ind']._5min_sma26, kwargs['ind']._5min_sma12, kwargs['ind']._5min_prev_ema200, kwargs['ind']._5min_prev_ema50, kwargs['ind']._5min_prev_ema26, kwargs['ind']._5min_prev_ema12, kwargs['ind']._5min_ema200, kwargs['ind']._5min_ema50, kwargs['ind']._5min_ema26, kwargs['ind']._5min_ema12, kwargs['ind']._5min_trend_moving_ave, kwargs['ind']._5min_fast_moving_ave, kwargs['ind']._5min_slow_moving_ave, kwargs['ind']._5min_stop_moving_ave, kwargs['ind']._5min_fast_moving_ave_prev, kwargs['ind']._5min_stop_moving_ave_prev, kwargs['ind']._5min_prev_macd, kwargs['ind']._5min_macd_list)
 			#if True:
-			#if self.plot_curr_date(curr_date, test_date):
-				#kwargs['plt'].populate_axes(assets, curr_date, _5min_close, kwargs['ind']._5min_fast_ma, kwargs['ind']._5min_slow_ma, kwargs['ind']._5min_stop_ma, kwargs['ind']._5min_trend_ma, kwargs['ind']._5min_macd_np, kwargs['ind']._5min_macd_signal_line_np, kwargs['ind']._5min_rsi, kwargs['ind']._5min_atr, kwargs['ind']._5min_vwap, kwargs['ind']._5min_macd_signal_diff, _5min_candlestick_ohlc_all_stocks)		
+			if self.plot_curr_date(curr_date, test_date):
+				kwargs['plt'].populate_axes(assets, curr_date, _5min_close, kwargs['ind']._5min_fast_ma, kwargs['ind']._5min_slow_ma, kwargs['ind']._5min_stop_ma, kwargs['ind']._5min_trend_ma, kwargs['ind']._5min_macd_np, kwargs['ind']._5min_macd_signal_line_np, kwargs['ind']._5min_rsi, kwargs['ind']._5min_atr, kwargs['ind']._5min_vwap, kwargs['ind']._5min_macd_signal_diff, _5min_candlestick_ohlc_all_stocks)		
 
 
 
@@ -702,6 +723,15 @@ class Abcdtrader:
 			print("\n\n///////////////START OF TEST DAY OPEN PRICE = "+str(_1min_open_price)+" ////////////////////////////////\n\n")
 			self.file_log_write("\n"+str(curr_date)+"\n\n*************************************************\n")
 			self.file_log1_write("\n"+str(curr_date)+"\n\n*************************************************\n")
+			
+			yesterday_open, yesterday_close, yesterday_hi, yesterday_lo, yesterday_vol = backtrader.get_prev_day_ochlv(kwargs['config'], assets, day_periodB, 2, curr_date)
+			self.yesterday_hi = yesterday_hi[0]
+			self.yesterday_lo = yesterday_lo[0]
+			print("yesterday hi "+str(self.yesterday_hi))
+			print("yesterday lo "+str(self.yesterday_lo))
+
+		if self.is_same_day(curr_date, test_date) and curr_date.timestamp() >= test_date.timestamp():
+			self.update_daily_hi_lo(_1min_open_price ,_1min_close, assets)
 
 
 		kwargs['sr']._1min_potential_support_levels = kwargs['sr'].append_to_support_list(assets, kwargs['ind']._1min_short_atr, _1min_open_price, _1min_close, _1min_lo_prices_df.tail(n=1).to_numpy()[0], curr_date, kwargs['sr']._1min_potential_support_levels, kwargs['sr']._1min_left_flanking_candlestick_support)
@@ -747,10 +777,12 @@ class Abcdtrader:
 
 				for i in range(0, len(assets)):
 					#kwargs['plt'].plot_full_chart(self, test_date ,kwargs['sr']._1min_refined_support_levels, kwargs['sr']._1min_refined_resistance_levels, kwargs['pNl']._5min_long_positions, kwargs['pNl']._5min_short_positions, assets[i], i)
-					##kwargs['plt'].plot_full_chart(self, test_date ,kwargs['sr']._5min_refined_support_levels, kwargs['sr']._5min_refined_resistance_levels, kwargs['pNl']._5min_long_positions, kwargs['pNl']._5min_short_positions, assets[i], i)
+					kwargs['plt'].plot_full_chart(self, test_date ,kwargs['sr']._5min_refined_support_levels, kwargs['sr']._5min_refined_resistance_levels, kwargs['pNl']._5min_long_positions, kwargs['pNl']._5min_short_positions, assets[i], i)
 					pass
 
 				print("End of test day reached. Let's do some analysis;)")
+				for i in range(0, len(assets)):
+					print(str(assets[i])+": Prev day hi "+str(self.yesterday_hi[i])+" prev day lo "+str(self.yesterday_lo[i])+" Today hi "+str(self.today_hi[i])+" Today lo "+str(self.today_lo[i]))
 				kwargs['pNl'].process_pnl(assets, kwargs)
 				kwargs['pNl'].log_pnl(self, assets, test_date, kwargs)
 				#kwargs['sr'].print_support_resistance_list(assets, kwargs['stock_index'])
