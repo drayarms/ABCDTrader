@@ -92,7 +92,10 @@ class Abcdtrader:
 		self.yesterday_hi = [-np.inf] * num_assets
 		self.yesterday_lo = [np.inf] * num_assets
 		self.today_hi = [-np.inf] * num_assets
-		self.today_lo = [np.inf] * num_assets		
+		self.today_lo = [np.inf] * num_assets	
+		self.yesterday_close = [0] * num_assets	
+		self.today_open = [0] * num_assets	
+
 
 
 	def file_log_write(self, txt):
@@ -727,8 +730,12 @@ class Abcdtrader:
 			yesterday_open, yesterday_close, yesterday_hi, yesterday_lo, yesterday_vol = backtrader.get_prev_day_ochlv(kwargs['config'], assets, day_periodB, 2, curr_date)
 			self.yesterday_hi = yesterday_hi[0]
 			self.yesterday_lo = yesterday_lo[0]
+			self.yesterday_close = yesterday_close[0]
+			self.today_open = _1min_open_price
 			print("yesterday hi "+str(self.yesterday_hi))
 			print("yesterday lo "+str(self.yesterday_lo))
+			print("yesterday close "+str(self.yesterday_close))
+			print("today open "+str(self.today_open))
 
 		if self.is_same_day(curr_date, test_date) and curr_date.timestamp() >= test_date.timestamp():
 			self.update_daily_hi_lo(_1min_open_price ,_1min_close, assets)

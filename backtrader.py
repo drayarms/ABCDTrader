@@ -243,8 +243,8 @@ class Backtrader:
 		last_n_dates = self.get_last_n_dates(kwargs['config'], assets, day_periodB, strategy.num_training_days, start_date)#last_n_dates[-1] would be midnight of previous day, or of Friday if test day is Monday
 		#initial_start_date = last_n_dates.index[-1].tz_convert(tz=kwargs['MY_TZ']) + pd.Timedelta('570minutes') + pd.Timedelta('570minutes') + pd.Timedelta('570minutes') + pd.Timedelta('300minutes')#06:30AM
 		#print("Last n dates [-1] "+str(last_n_dates.index[-1].tz_convert(tz=kwargs['MY_TZ'])))
-		##initial_start_date = last_n_dates.index[-1].tz_convert(tz=kwargs['MY_TZ']) + pd.Timedelta('570minutes') + pd.Timedelta('570minutes') + pd.Timedelta('570minutes')#01:30AM
-		initial_start_date = last_n_dates.index[-1].tz_convert(tz=kwargs['MY_TZ']) + pd.Timedelta('570minutes') #06:30AM prev day
+		initial_start_date = last_n_dates.index[-1].tz_convert(tz=kwargs['MY_TZ']) + pd.Timedelta('570minutes') + pd.Timedelta('570minutes') + pd.Timedelta('570minutes')#01:30AM
+		##initial_start_date = last_n_dates.index[-1].tz_convert(tz=kwargs['MY_TZ']) + pd.Timedelta('570minutes') #06:30AM prev day
 		#print("Initial start date [-1] "+str(initial_start_date))
 		last_weekday = last_n_dates.index[-1].weekday()
 		if last_weekday == 4:#Friday
