@@ -407,6 +407,35 @@ class Supportresistance:
 
 
 
+	def get_risk_reward_stop_up(self, i, risk_reward_stop, support_list, resistance_list, market_price):
+		risk_level = support_list[i][-1].get("lowest price level")
+		stop_level = support_list[i][-1].get("lowest price level")
+		risk = market_price[i] - risk_level#abs(hi - support_list[i][-2].get("lowest price level"))	
+		reward, reward_level = self.get_uptrending_reward(support_list[i], resistance_list[i], market_price[i])	
+		risk_reward_stop[i].update({"risk":risk})
+		risk_reward_stop[i].update({"reward":reward})	
+		risk_reward_stop[i].update({"risk level":risk_level})
+		risk_reward_stop[i].update({"reward level":reward_level})							
+		risk_reward_stop[i].update({"stop level":stop_level})	
+
+		return risk_reward_stop	
+
+
+
+	def get_risk_reward_stop_down(self, i, risk_reward_stop, support_list, resistance_list, market_price):
+		risk_level = resistance_list[i][-1].get("highest price level")
+		stop_level = resistance_list[i][-1].get("highest price level")
+		risk = risk_level - market_price[i]#lo)
+		reward, reward_level = self.get_downtrending_reward(support_list[i], resistance_list[i], market_price[i])	
+		risk_reward_stop[i].update({"risk":risk})
+		risk_reward_stop[i].update({"reward":reward})
+		risk_reward_stop[i].update({"risk level":risk_level})
+		risk_reward_stop[i].update({"reward level":reward_level})
+		risk_reward_stop[i].update({"stop level":stop_level})
+
+		return risk_reward_stop
+
+
 
 	#def access_downtrending(self, assets, n, support_list, resistance_list, opn, close, atr, rsi, time, start_of_day, time_frame, trend, kwargs):
 	def access_downtrending(self, assets, n, support_list, resistance_list, market_price, atr, rsi, time, start_of_day, time_frame, trend, kwargs):
@@ -483,19 +512,8 @@ class Supportresistance:
 								(trend[i].get("current trend") == "up" and last_n_minus1_supports_declining) or (not trend[i].get("current trend") == "up" and last_n_minus1_supports_declining)#or use not none, none?
 						) and (market_price[i] < resistance_list[i][-1].get("highest price level") and market_price[i] > support_list[i][-1].get("lowest price level") and support_list[i][-1].get("lowest price level") < resistance_list[i][-1].get("highest price level") and support_list[i][-1].get("lowest price level") < resistance_list[i][-2].get("highest price level")):
 							downtrending[i] = True#Stock is downtrending						
-							downtrending[i] = True#Stock is downtrending
-							
-							risk_level = resistance_list[i][-1].get("highest price level")
-							stop_level = resistance_list[i][-1].get("highest price level")
-							risk = risk_level - market_price[i]#lo)
-							reward, reward_level = self.get_downtrending_reward(support_list[i], resistance_list[i], market_price[i])	
-							risk_reward_stop[i].update({"risk":risk})
-							risk_reward_stop[i].update({"reward":reward})
-							risk_reward_stop[i].update({"risk level":risk_level})
-							risk_reward_stop[i].update({"reward level":reward_level})
-							risk_reward_stop[i].update({"stop level":stop_level})
+							risk_reward_stop = self.get_risk_reward_stop_down(i, risk_reward_stop, support_list, resistance_list, market_price)
 
-				
 		return downtrending, risk_reward_stop#, downward_to_upward_strength_ratio
 
 
@@ -578,15 +596,8 @@ class Supportresistance:
 							) and (market_price[i] < resistance_list[i][-1].get("highest price level") and market_price[i] > support_list[i][-1].get("lowest price level") and support_list[i][-1].get("lowest price level") < resistance_list[i][-1].get("highest price level") and support_list[i][-2].get("lowest price level") < resistance_list[i][-1].get("highest price level")):
 
 							uptrending[i] = True#Stock is uptrending
-							risk_level = support_list[i][-1].get("lowest price level")
-							stop_level = support_list[i][-1].get("lowest price level")
-							risk = market_price[i] - risk_level#abs(hi - support_list[i][-2].get("lowest price level"))	
-							reward, reward_level = self.get_uptrending_reward(support_list[i], resistance_list[i], market_price[i])	
-							risk_reward_stop[i].update({"risk":risk})
-							risk_reward_stop[i].update({"reward":reward})	
-							risk_reward_stop[i].update({"risk level":risk_level})
-							risk_reward_stop[i].update({"reward level":reward_level})							
-							risk_reward_stop[i].update({"stop level":stop_level})
+							risk_reward_stop = self.get_risk_reward_stop_up(i, risk_reward_stop, support_list, resistance_list, market_price)
+
 		return uptrending, risk_reward_stop#, downward_to_upward_strength_ratio
 
 

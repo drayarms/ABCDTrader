@@ -240,10 +240,10 @@ class Abcdtrader:
 						
 						#if (side == "long" and len(resistance_levels[i]) >= 2 and resistance_levels[i][-1].get("highest price level") > resistance_levels[i][-2].get("highest price level")and close[i] < resistance_levels[i][-2].get("highest price level")) or (side == "short" and len(support_levels[i]) >= 2 and support_levels[i][-1].get("lowest price level") < support_levels[i][-2].get("lowest price level") and close[i] > support_levels[i][-2].get("lowest price level")):
 						if (
-							(side == "long" and len(resistance_levels[i]) >= 2 and resistance_levels[i][-1].get("highest price level") < resistance_levels[i][-2].get("highest price level") and resistance_levels[i][-1].get("latest time").timestamp() > support_levels[i][-1].get("latest time").timestamp()) or 
-							(side == "short" and len(support_levels[i]) >= 2 and support_levels[i][-1].get("lowest price level") > support_levels[i][-2].get("lowest price level") and support_levels[i][-1].get("latest time").timestamp() > resistance_levels[i][-1].get("latest time").timestamp()) or
-							(side == "long" and len(resistance_levels[i]) >= 2 and resistance_levels[i][-1].get("highest price level") > resistance_levels[i][-2].get("highest price level")and close[i] < resistance_levels[i][-2].get("highest price level") and resistance_levels[i][-1].get("latest time").timestamp() > support_levels[i][-1].get("latest time").timestamp()) or 
-							(side == "short" and len(support_levels[i]) >= 2 and support_levels[i][-1].get("lowest price level") < support_levels[i][-2].get("lowest price level") and close[i] > support_levels[i][-2].get("lowest price level") and support_levels[i][-1].get("latest time").timestamp() > resistance_levels[i][-1].get("latest time").timestamp())
+							(side == "long" and len(resistance_levels[i]) >= 2 and len(support_levels[i]) >= 1 and resistance_levels[i][-1].get("highest price level") < resistance_levels[i][-2].get("highest price level") and resistance_levels[i][-1].get("latest time").timestamp() > support_levels[i][-1].get("latest time").timestamp()) or 
+							(side == "short" and len(support_levels[i]) >= 2 and len(resistance_levels[i]) >= 1 and support_levels[i][-1].get("lowest price level") > support_levels[i][-2].get("lowest price level") and support_levels[i][-1].get("latest time").timestamp() > resistance_levels[i][-1].get("latest time").timestamp()) or
+							(side == "long" and len(resistance_levels[i]) >= 2 and len(support_levels[i]) >= 1 and resistance_levels[i][-1].get("highest price level") > resistance_levels[i][-2].get("highest price level")and close[i] < resistance_levels[i][-2].get("highest price level") and resistance_levels[i][-1].get("latest time").timestamp() > support_levels[i][-1].get("latest time").timestamp()) or 
+							(side == "short" and len(support_levels[i]) >= 2 and len(resistance_levels[i]) >= 1 and support_levels[i][-1].get("lowest price level") < support_levels[i][-2].get("lowest price level") and close[i] > support_levels[i][-2].get("lowest price level") and support_levels[i][-1].get("latest time").timestamp() > resistance_levels[i][-1].get("latest time").timestamp())
 						):
 							#positions[i][j] = self.exit_position(side, positions[i][j], close[i], curr_date, kwargs)
 							self.exit_position(side, positions[i][j], close[i], curr_date, kwargs)
@@ -337,6 +337,20 @@ class Abcdtrader:
 
 	def determine_entry(self, assets, is_trending_up, is_trending_down, risk_reward_stop_uptrending, risk_reward_stop_downtrending, _1min_is_uptrending, _1min_is_downtrending, market_price, time, kwargs):
 
+
+		def go_long(risk, reward, risk_level, reward_level, stop_level):
+			if reward_level > 0 and  risk < 0.5*kwargs['ind']._5min_atr[i] and kwargs['sr'].appropriate_time(time, kwargs['sr']._5min_refined_support_levels[i][-1]):# and not _1min_is_downtrending[i]:# and reward > atr[i] and (risk/reward) < 1:
+				if self.position_qualifies_for_entry(assets[i], "long", kwargs['pNl']._5min_long_positions[i], kwargs['pNl']._5min_short_positions[i], market_price[i], time, kwargs):	
+					#kwargs['pNl']._5min_long_positions[i] = self.enter_position(assets, kwargs['pNl']._5min_long_positions[i], "long", risk, reward, risk_level, reward_level, stop_level, market_price[i], time, kwargs) 
+					self.enter_position(assets, kwargs['pNl']._5min_long_positions[i], "long", risk, reward, risk_level, reward_level, stop_level, market_price[i], time, kwargs) 
+
+		def go_short(risk, reward, risk_level, reward_level, stop_level):
+			if self.asset_is_shortable(assets[i], kwargs['shortable_assets']) and reward_level > 0 and  risk < 0.5*kwargs['ind']._5min_atr[i] and kwargs['sr'].appropriate_time(time, kwargs['sr']._5min_refined_resistance_levels[i][-1]):# and not _1min_is_uptrending[i]:# and reward > kwargs['ind']._5min_atr[i] and (risk/reward) < 1:
+				if self.position_qualifies_for_entry(assets[i], "short", kwargs['pNl']._5min_short_positions[i], kwargs['pNl']._5min_long_positions[i], market_price[i], time, kwargs):		
+					#kwargs['pNl']._5min_short_positions[i] = self.enter_position(assets, kwargs['pNl']._5min_short_positions[i], "short", risk, reward, risk_level, reward_level, stop_level, market_price[i], time, kwargs)				
+					self.enter_position(assets, kwargs['pNl']._5min_short_positions[i], "short", risk, reward, risk_level, reward_level, stop_level, market_price[i], time, kwargs)					
+
+
 		def determine_entry_for_asset(i):
 			if is_trending_up[i] or is_trending_down[i]:#Mutually exclusive events
 				risk = risk_reward_stop_uptrending[i].get("risk")
@@ -355,23 +369,12 @@ class Abcdtrader:
 				#Take new position if one doesn't already exist in given direction
 				#Up and down should be mutually exclusive
 
-				def go_long():
-					if reward_level > 0 and  risk < 0.5*kwargs['ind']._5min_atr[i] and kwargs['sr'].appropriate_time(time, kwargs['sr']._5min_refined_support_levels[i][-1]):# and not _1min_is_downtrending[i]:# and reward > atr[i] and (risk/reward) < 1:
-						if self.position_qualifies_for_entry(assets[i], "long", kwargs['pNl']._5min_long_positions[i], kwargs['pNl']._5min_short_positions[i], market_price[i], time, kwargs):	
-							#kwargs['pNl']._5min_long_positions[i] = self.enter_position(assets, kwargs['pNl']._5min_long_positions[i], "long", risk, reward, risk_level, reward_level, stop_level, market_price[i], time, kwargs) 
-							self.enter_position(assets, kwargs['pNl']._5min_long_positions[i], "long", risk, reward, risk_level, reward_level, stop_level, market_price[i], time, kwargs) 
-
-				def go_short():
-					if self.asset_is_shortable(assets[i], kwargs['shortable_assets']) and reward_level > 0 and  risk < 0.5*kwargs['ind']._5min_atr[i] and kwargs['sr'].appropriate_time(time, kwargs['sr']._5min_refined_resistance_levels[i][-1]):# and not _1min_is_uptrending[i]:# and reward > kwargs['ind']._5min_atr[i] and (risk/reward) < 1:
-						if self.position_qualifies_for_entry(assets[i], "short", kwargs['pNl']._5min_short_positions[i], kwargs['pNl']._5min_long_positions[i], market_price[i], time, kwargs):		
-							#kwargs['pNl']._5min_short_positions[i] = self.enter_position(assets, kwargs['pNl']._5min_short_positions[i], "short", risk, reward, risk_level, reward_level, stop_level, market_price[i], time, kwargs)				
-							self.enter_position(assets, kwargs['pNl']._5min_short_positions[i], "short", risk, reward, risk_level, reward_level, stop_level, market_price[i], time, kwargs)					
-
+				#Go long and go short originally defined here
 
 				if is_trending_up[i]:#Swing hi
 					if not kwargs['sr']._5min_trend[i].get("current trend") == "down":#Curr trend is either up or none(such as at market open)
 
-						go_long()
+						go_long(risk, reward, risk_level, reward_level, stop_level)
 						#print(str(i)+") "+str(assets[i])+" went long")
 
 					else:#Current trend is down
@@ -384,7 +387,7 @@ class Abcdtrader:
 				if is_trending_down[i]:#Swing lo	
 					if not kwargs['sr']._5min_trend[i].get("current trend") == "up":#Curr trend is either down or none(such as at market open)
 
-						go_short()
+						go_short(risk, reward, risk_level, reward_level, stop_level)
 						#print(str(i)+") "+str(assets[i])+" went short")
 
 					else:#current trend is up
@@ -408,155 +411,6 @@ class Abcdtrader:
 		for t in T:
 			t.join()
 
-
-
-
-
-	def determine_entry2(self, assets, is_trending_up, is_trending_down, risk_reward_stop_uptrending, risk_reward_stop_downtrending, _1min_is_uptrending, _1min_is_downtrending, market_price, time, kwargs):
-		for i in range(0, len(assets)):	
-			if is_trending_up[i] or is_trending_down[i]:#Mutually exclusive events
-				risk = risk_reward_stop_uptrending[i].get("risk")
-				reward = risk_reward_stop_uptrending[i].get("reward")
-				risk_level = risk_reward_stop_uptrending[i].get("risk level")
-				reward_level = risk_reward_stop_uptrending[i].get("reward level")
-				stop_level = risk_reward_stop_uptrending[i].get("stop level")
-
-				if is_trending_down[i]:
-					risk = risk_reward_stop_downtrending[i].get("risk")
-					reward = risk_reward_stop_downtrending[i].get("reward")
-					risk_level = risk_reward_stop_downtrending[i].get("risk level")
-					reward_level = risk_reward_stop_downtrending[i].get("reward level")
-					stop_level = risk_reward_stop_downtrending[i].get("stop level")
-
-				#Take new position if one doesn't already exist in given direction
-				#Up and down should be mutually exclusive
-
-				def go_long():
-					if reward_level > 0 and  risk < 0.5*kwargs['ind']._5min_atr[i] and kwargs['sr'].appropriate_time(time, kwargs['sr']._5min_refined_support_levels[i][-1]):# and not _1min_is_downtrending[i]:# and reward > atr[i] and (risk/reward) < 1:
-						if self.position_qualifies_for_entry(assets[i], "long", kwargs['pNl']._5min_long_positions[i], kwargs['pNl']._5min_short_positions[i], market_price[i], time, kwargs):	
-							kwargs['pNl']._5min_long_positions[i] = self.enter_position(assets, kwargs['pNl']._5min_long_positions[i], "long", risk, reward, risk_level, reward_level, stop_level, market_price[i], time, kwargs) 
-
-
-				def go_short():
-					if self.asset_is_shortable(assets[i], kwargs['shortable_assets']) and reward_level > 0 and  risk < 0.5*kwargs['ind']._5min_atr[i] and kwargs['sr'].appropriate_time(time, kwargs['sr']._5min_refined_resistance_levels[i][-1]):# and not _1min_is_uptrending[i]:# and reward > kwargs['ind']._5min_atr[i] and (risk/reward) < 1:
-						if self.position_qualifies_for_entry(assets[i], "short", kwargs['pNl']._5min_short_positions[i], kwargs['pNl']._5min_long_positions[i], market_price[i], time, kwargs):		
-							kwargs['pNl']._5min_short_positions[i] = self.enter_position(assets, kwargs['pNl']._5min_short_positions[i], "short", risk, reward, risk_level, reward_level, stop_level, market_price[i], time, kwargs)					
-
-
-
-				if is_trending_up[i]:#Swing hi
-					if not kwargs['sr']._5min_trend[i].get("current trend") == "down":#Curr trend is either up or none(such as at market open)
-
-						go_long()
-
-					else:#Current trend is down
-						#Only take position if supports are holding the line on moving average
-						pass
-					kwargs['sr']._5min_trend[i].update({"current trend":"up"})
-
-
-
-				if is_trending_down[i]:#Swing lo	
-					if not kwargs['sr']._5min_trend[i].get("current trend") == "up":#Curr trend is either down or none(such as at market open)
-
-						go_short()
-
-					else:#current trend is up
-						#Only take position if resistances are holding the line on moving average
-						pass
-					kwargs['sr']._5min_trend[i].update({"current trend":"down"})
-
-
-
-	def determine_entry1(self, assets, is_trending, risk_reward_stop, _1min_is_uptrending, _1min_is_downtrending, close, time, swing, kwargs):
-		#print("Risk Reward Stop\n"+str(risk_reward_stop))
-		for i in range(0, len(assets)):	
-			#print("i = "+str(i)+" "+str(assets[i]))
-			if is_trending[i]:
-				risk = risk_reward_stop[i].get("risk")
-				reward = risk_reward_stop[i].get("reward")
-				risk_level = risk_reward_stop[i].get("risk level")
-				reward_level = risk_reward_stop[i].get("reward level")
-				stop_level = risk_reward_stop[i].get("stop level")
-
-				#Take new position if one doesn't already exist in given direction
-				#Up and down should be mutually exclusive
-
-				def go_long():
-					if reward_level > 0 and  risk < 0.5*kwargs['ind']._5min_atr[i] and kwargs['sr'].appropriate_time(time, kwargs['sr']._5min_refined_support_levels[i][-1]):# and not _1min_is_downtrending[i]:# and reward > atr[i] and (risk/reward) < 1:
-						if self.position_qualifies_for_entry(assets[i], "long", kwargs['pNl']._5min_long_positions[i], kwargs['pNl']._5min_short_positions[i], close[i], time, kwargs):	
-							kwargs['pNl']._5min_long_positions[i] = self.enter_position(assets, kwargs['pNl']._5min_long_positions[i], "long", risk, reward, risk_level, reward_level, stop_level, close[i], time, kwargs) 
-
-
-				def go_short():
-					if self.asset_is_shortable(assets[i], kwargs['shortable_assets']) and reward_level > 0 and  risk < 0.5*kwargs['ind']._5min_atr[i] and kwargs['sr'].appropriate_time(time, kwargs['sr']._5min_refined_resistance_levels[i][-1]):# and not _1min_is_uptrending[i]:# and reward > kwargs['ind']._5min_atr[i] and (risk/reward) < 1:
-						if self.position_qualifies_for_entry(assets[i], "short", kwargs['pNl']._5min_short_positions[i], kwargs['pNl']._5min_long_positions[i], close[i], time, kwargs):		
-							kwargs['pNl']._5min_short_positions[i] = self.enter_position(assets, kwargs['pNl']._5min_short_positions[i], "short", risk, reward, risk_level, reward_level, stop_level, close[i], time, kwargs)					
-
-
-				"""if swing == "hi":#Swing hi
-					if not kwargs['sr']._5min_trend[i].get("current trend") == "up":#Curr trend is either down or none(such as at market open)
-						price_between_last_risk_reward_levels = kwargs['sr'].price_between_last_risk_reward_pair(close[i], kwargs['pNl']._5min_long_positions[i])
-
-						#if reward_level > 0 and  risk < 0.5*kwargs['ind']._5min_atr[i] and kwargs['sr'].appropriate_time(time, kwargs['sr']._5min_refined_support_levels[i][-1]):# and not _1min_is_downtrending[i]:# and reward > atr[i] and (risk/reward) < 1:
-							#if self.position_qualifies_for_entry(assets[i], "long", kwargs['pNl']._5min_long_positions[i], kwargs['pNl']._5min_short_positions[i], close[i], time, kwargs):	
-								#kwargs['pNl']._5min_long_positions[i] = self.enter_position(assets, kwargs['pNl']._5min_long_positions[i], "long", risk, reward, risk_level, reward_level, stop_level, close[i], time, kwargs) 
-						go_long()
-
-						kwargs['sr']._5min_trend[i].update({"current trend":"up"})
-					else:#Current trend is already up
-						#Only take position if supports are holding the line on moving average
-						#pass
-						go_long()
-
-
-
-				if swing == "lo":#Swing lo	
-					if not kwargs['sr']._5min_trend[i].get("current trend") == "down":#Curr trend is either up or none(such as at market open)
-						price_between_last_risk_reward_levels = kwargs['sr'].price_between_last_risk_reward_pair(close[i], kwargs['pNl']._5min_short_positions[i])
-
-						#if reward_level > 0 and  risk < 0.5*kwargs['ind']._5min_atr[i] and kwargs['sr'].appropriate_time(time, kwargs['sr']._5min_refined_resistance_levels[i][-1]):# and not _1min_is_uptrending[i]:# and reward > kwargs['ind']._5min_atr[i] and (risk/reward) < 1:
-							#if self.position_qualifies_for_entry(assets[i], "short", kwargs['pNl']._5min_short_positions[i], kwargs['pNl']._5min_long_positions[i], close[i], time, kwargs):		
-								#kwargs['pNl']._5min_short_positions[i] = self.enter_position(assets, kwargs['pNl']._5min_short_positions[i], "short", risk, reward, risk_level, reward_level, stop_level, close[i], time, kwargs)
-						go_short()
-
-						kwargs['sr']._5min_trend[i].update({"current trend":"down"})
-					else:#current trend is already down
-						#Only take position if resistances are holding the line on moving average
-						#pass
-						go_short()"""
-
-
-
-				if swing == "hi":#Swing hi
-					if not kwargs['sr']._5min_trend[i].get("current trend") == "down":#Curr trend is either up or none(such as at market open)
-						#price_between_last_risk_reward_levels = kwargs['sr'].price_between_last_risk_reward_pair(close[i], kwargs['pNl']._5min_long_positions[i])
-
-						#if reward_level > 0 and  risk < 0.5*kwargs['ind']._5min_atr[i] and kwargs['sr'].appropriate_time(time, kwargs['sr']._5min_refined_support_levels[i][-1]):# and not _1min_is_downtrending[i]:# and reward > atr[i] and (risk/reward) < 1:
-							#if self.position_qualifies_for_entry(assets[i], "long", kwargs['pNl']._5min_long_positions[i], kwargs['pNl']._5min_short_positions[i], close[i], time, kwargs):	
-								#kwargs['pNl']._5min_long_positions[i] = self.enter_position(assets,kwargs['pNl']._5min_long_positions[i], "long", risk, reward, risk_level, reward_level, stop_level, close[i], time, kwargs) 
-						go_long()
-
-					else:#Current trend is down
-						#Only take position if supports are holding the line on moving average
-						pass
-					kwargs['sr']._5min_trend[i].update({"current trend":"up"})
-
-
-
-				if swing == "lo":#Swing lo	
-					if not kwargs['sr']._5min_trend[i].get("current trend") == "up":#Curr trend is either down or none(such as at market open)
-						#price_between_last_risk_reward_levels = kwargs['sr'].price_between_last_risk_reward_pair(close[i], kwargs['pNl']._5min_short_positions[i])
-
-						#if reward_level > 0 and  risk < 0.5*kwargs['ind']._5min_atr[i] and kwargs['sr'].appropriate_time(time, kwargs['sr']._5min_refined_resistance_levels[i][-1]):# and not _1min_is_uptrending[i]:# and reward > kwargs['ind']._5min_atr[i] and (risk/reward) < 1:
-							#if self.position_qualifies_for_entry(assets[i], "short", kwargs['pNl']._5min_short_positions[i], kwargs['pNl']._5min_long_positions[i], close[i], time, kwargs):		
-								#kwargs['pNl']._5min_short_positions[i] = self.enter_position(assets, kwargs['pNl']._5min_short_positions[i], "short", risk, reward, risk_level, reward_level, stop_level, close[i], time, kwargs)
-						go_short()
-
-					else:#current trend is up
-						#Only take position if resistances are holding the line on moving average
-						pass
-					kwargs['sr']._5min_trend[i].update({"current trend":"down"})	
 											
 
 
